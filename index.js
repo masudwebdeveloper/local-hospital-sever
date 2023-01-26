@@ -23,7 +23,54 @@ async function run() {
     const appointmentCollection = client
       .db("localHospital")
       .collection("appointment");
+    const usersCollection = client.db("localHospital").collection("users");
     const doctorsCollection = client.db("localHospital").collection("doctors");
+
+    // save all user this api
+    app.post("/user", async (req, res) => {
+      const user = req.body;
+      const filter = {
+        email: user.email,
+      };
+      const alreadyUser = await usersCollection.find(filter).toArray();
+      if (alreadyUser.length) {
+        const message = `Already have a user this ${user.email}`;
+        return res.send({ acknowledged: false, message });
+      }
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+
+    //get all user this api
+    app.get("/allusers", async (req, res) => {
+      const allusers = {};
+      const result = await usersCollection.find(allusers).toArray();
+      res.send(result);
+    });
+
+    //deleted user use this api
+    app.delete("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await usersCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //update user using this api
+    app.put("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const user = req.body;
+      const filter = { _id: ObjectId(id) };
+      const option = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: user.name,
+          email: user.email,
+        },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc, option);
+      res.send(result);
+    });
 
     app.post("/appointments", async (req, res) => {
       const appointment = req.body;
@@ -45,6 +92,7 @@ async function run() {
       const result = await appointmentCollection.findOne(query);
       res.send(result);
     });
+
     app.put("/appointments/:id", async (req, res) => {
       const id = req.params.id;
       const update = req.body;
@@ -59,7 +107,7 @@ async function run() {
           gender: update.gender,
           specialty: update.specialty,
           date: update.date,
-          time: update.time
+          time: update.time,
         },
       };
       const result = await appointmentCollection.updateOne(
