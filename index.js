@@ -79,6 +79,20 @@ async function run() {
       res.send(result);
     });
 
+    //all appointment get using this api
+    app.get('/allappointments', async(req, res)=>{
+      const query = {};
+      const result = await appointmentCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    app.get('/user/admin/:email', async(req, res)=>{
+      const email = req.params.email;
+      const query = {email: email};
+      const result = await usersCollection.findOne(query);
+      res.send({isAdmin: result?.role === 'admin'})
+    })
+
     app.get("/myappointments/:email", async (req, res) => {
       const email = req.params.email;
       const query = { email: email };
